@@ -7,7 +7,7 @@ import torch
 def read_data() -> tuple:
     data = []
     labels = np.array([])
-    for i in range(1,2):
+    for i in range(1, 4):
         path = "C:\\Ariel codes\\NN\\Adaline\\" + str(i) + ".txt"
         with open(path) as f:
             idx = 0
@@ -29,8 +29,7 @@ def read_data() -> tuple:
     return data, labels
 
 
-def train_test_split(data, labels) -> tuple:
-
+def train_test_split(data, labels, num) -> tuple:
     # Check no error occurred during reading
     if len(data) != len(labels):
         print("ERROR")
@@ -49,15 +48,42 @@ def train_test_split(data, labels) -> tuple:
     X, y = X[shuffle_idx], y[shuffle_idx]
 
     # Size of 80% of the data
-    percent80 = int(shuffle_idx.size(0) * 0.8)
+    data_size = shuffle_idx.size(0)
+    percent80 = int(data_size * 0.8)
+    percent60 = int(data_size * 0.6)
+    percent40 = int(data_size * 0.4)
+    percent20 = int(data_size * 0.2)
 
     # Slicing into X_train, X_test, y_train, y_test
-    X_train, X_test = X[shuffle_idx[:percent80]], X[shuffle_idx[percent80:]]
-    y_train, y_test = y[shuffle_idx[:percent80]], y[shuffle_idx[percent80:]]
+    if num == 1:
+        X_train, X_test = X[shuffle_idx[:percent80]], X[shuffle_idx[percent80:]]
+        y_train, y_test = y[shuffle_idx[:percent80]], y[shuffle_idx[percent80:]]
+
+    elif num == 2:
+        X_train, X_test = X[torch.tensor(list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], X[shuffle_idx[percent60:percent80]]
+        y_train, y_test = y[torch.tensor(list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], y[shuffle_idx[percent60:percent80]]
+
+    elif num == 3:
+        X_train, X_test = X[torch.tensor(list(shuffle_idx[:percent40]) + list(shuffle_idx[percent60:]))], X[shuffle_idx[percent40:percent60]]
+        y_train, y_test = y[torch.tensor(list(shuffle_idx[:percent40]) + list(shuffle_idx[percent60:]))], y[shuffle_idx[percent40:percent60]]
+
+    elif num == 4:
+        X_train, X_test = X[torch.tensor(list(shuffle_idx[:percent20]) + list(shuffle_idx[percent40:]))], X[shuffle_idx[percent20:percent40]]
+        y_train, y_test = y[torch.tensor(list(shuffle_idx[:percent20]) + list(shuffle_idx[percent40:]))], y[shuffle_idx[percent20:percent40]]
+
+    elif num == 5:
+        X_train, X_test = X[shuffle_idx[percent20:]], X[shuffle_idx[:percent20]]
+        y_train, y_test = y[shuffle_idx[percent20:]], y[shuffle_idx[:percent20]]
 
     return X_train, X_test, y_train, y_test
 
 
-if __name__ == '__main__':
+def run_adaline():
     data, labels = read_data()
-    X_train, X_test, y_train, y_test = train_test_split(data, labels)
+    for i in range(1, 6):
+        print(i)
+        X_train, X_test, y_train, y_test = train_test_split(data, labels, i)
+
+
+if __name__ == '__main__':
+    run_adaline()
