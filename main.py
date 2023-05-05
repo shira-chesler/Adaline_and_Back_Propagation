@@ -1,32 +1,90 @@
+"""
+Adaline Tutorial
+================
+
+This tutorial demonstrates the implementation of Adaline algorithm for binary classification of text files.
+
+Dependencies
+------------
+
+- numpy
+- torch
+
+Code
+----
+
+First, we import the necessary libraries and define a constant EPSILLON.
+
+"""
+
 import numpy as np
 import torch
 
 EPSILLON = 1e-5
 
+"""
+Read Data
+---------
+
+The `read_data` function reads the data from the text files and returns a tuple containing the data and their corresponding labels.
+
+"""
+
 
 def read_data() -> tuple:
     data = []
     labels = np.array([])
-    for i in range(1, 4):
+    for i in range(1, 181):
         path = "C:\\Ariel codes\\NN\\Adaline\\" + str(i) + ".txt"
-        with open(path) as f:
-            idx = 0
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                if line == '\n':
-                    continue
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                line_data_str = line.split(',')
-                line_data_int = list(map(int, line_data_str))
-                labels = np.append(labels, line_data_int[0])
-                del line_data_int[0]
-                data.append(np.array(line_data_int))
-                idx += 1
-            f.close()
+        try:
+            with open(path) as f:
+                idx = 0
+                while True:
+                    line = f.readline()
+                    if not line:
+                        break
+                    if line == '\n':
+                        continue
+                    line = line.replace('(', '')
+                    line = line.replace(')', '')
+                    line_data_str = line.split(',')
+                    line_data_int = list(map(int, line_data_str))
+                    labels = np.append(labels, line_data_int[0])
+                    del line_data_int[0]
+                    data.append(np.array(line_data_int))
+                    idx += 1
+                f.close()
+        except:
+            pass
+    print("done reading")
     return data, labels
+
+
+"""
+Train Test Split
+----------------
+
+The `train_test_split` function splits the data into training and testing sets.
+"""
+
+
+def try_train_test_split(data, labels):
+    # Check no error occurred during reading
+    if len(data) != len(labels):
+        print("ERROR")
+        exit(1)
+    data_length = len(labels)
+
+    # Converting to torch type
+    X = torch.tensor(np.array(data))
+    y = torch.tensor(np.array(labels).astype(int), dtype=torch.int)
+    return X, X, y, y
+
+
+"""
+The `train_test_split` function splits the data into training and testing sets based on the input parameter num.
+
+"""
 
 
 def train_test_split(data, labels, num) -> tuple:
@@ -65,8 +123,9 @@ def train_test_split(data, labels, num) -> tuple:
         y_train, y_test = y[shuffle_idx[:percent80]], y[shuffle_idx[percent80:]]
 
     elif num == 2:
-        X_train, X_test = X[torch.tensor(list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], \
-                          X[shuffle_idx[percent60:percent80]]
+        X_train, X_test = X_train, X_test = X[torch.tensor(
+            list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], \
+                                            X[shuffle_idx[percent60:percent80]]
         y_train, y_test = y[torch.tensor(list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], y[
             shuffle_idx[percent60:percent80]]
 
@@ -86,21 +145,34 @@ def train_test_split(data, labels, num) -> tuple:
         X_train, X_test = X[shuffle_idx[percent20:]], X[shuffle_idx[:percent20]]
         y_train, y_test = y[shuffle_idx[percent20:]], y[shuffle_idx[:percent20]]
 
+    print("done splitting")
     return X_train, X_test, y_train, y_test
 
 
+"""
+Adjust Weights
+--------------
+
+The `adjust_weights` function adjusts the weights and bias of the Adaline model based on the training data.
+
+"""
+
+
 def adjust_weights(X_train, y_train) -> np.array:
-    # weights = np.empty(100)
-    # weights.fill(0.1)
+    print("starting weight adjusting")
     weights = np.random.uniform(low=0, high=0.1, size=100)
-    # print(weights)
     bias = 0
-    learning_rate = 0.015
+    learning_rate = 0.001
     max_weight_change = 1
-    while max_weight_change > EPSILLON:
+    max_iterations = 10000
+
+    iteration = 0
+    while max_weight_change > EPSILLON and iteration < max_iterations:
+        iteration += 1
+        if iteration % 1000 == 0:
+            print(iteration)
         max_weight_change = 0
         for i in range(0, len(X_train)):
-            # print(i)
             y_in = bias + (X_train[i] @ weights).sum()
             bias += learning_rate * (y_train[i] - y_in)
             for j in range(0, 100):
@@ -108,23 +180,50 @@ def adjust_weights(X_train, y_train) -> np.array:
                 weights[j] += add_weight
                 if add_weight > max_weight_change:
                     max_weight_change = add_weight
-                    # print("iteration: ", i, "new max: ", max_weight_change)
-        # print(weights)
     return bias, weights
 
 
+"""
+Prediction
+----------
+
+The `predict` function generates predictions based on the input test data, weights, bias, and class labels.
+
+"""
+
+
 def predict(X_test, weights, bias, label1, label2):
-    y_pred = np.dot(X_test, weights) + bias
-    # Apply the step function to convert y_pred to the given labels
-    y_pred_labels = np.where(y_pred >= 0, label2, label1)
+    y_pred = X_test @ weights + bias
+    print("y_pred", y_pred)
+    y_pred_labels = np.where(y_pred >= (label1 + label2) / 2, label2, label1)
     return y_pred_labels
+
+
+"""
+Compute Accuracy
+----------------
+
+The `compute_accuracy` function calculates the accuracy of the model by comparing its predictions to the ground truth labels.
+
+"""
 
 
 def compute_accuracy(y_test, y_pred):
     assert len(y_test) == len(y_pred)
+    print("y_pred", y_pred)
+    print("y_test", y_test)
     num_correct = np.sum(y_test == y_pred)
     accuracy = num_correct / len(y_test)
     return accuracy
+
+
+"""
+Run Adaline
+-----------
+
+The `run_adaline` function coordinates the entire process of reading the data, splitting the data, training the model, generating predictions, and computing the accuracy.
+
+"""
 
 
 def run_adaline(first, second):
@@ -146,7 +245,7 @@ def run_adaline(first, second):
 
     scores = []
 
-    first_label = 0
+    first_label = 1
     second_label = 0
 
     for i in range(1, 6):
@@ -164,20 +263,20 @@ def run_adaline(first, second):
                                                                 classify_lamed_vs_mem_labels, i)
             first_label = 2
             second_label = 3
+
         X_train = np.array([t.numpy() for t in X_train])
         y_train = y_train.cpu().detach().numpy()
 
-        # scaler = StandardScaler()
-        # X_train = scaler.fit_transform(X_train)
-        # X_test = scaler.transform(X_test)
+        X_test = np.array([t.numpy() for t in X_test])
+        y_test = y_test.cpu().detach().numpy()
 
         bias, weights = adjust_weights(X_train, y_train)
-        print("weights:", weights)
         y_pred_labels = predict(X_test, weights, bias, first_label, second_label)
         accuracy = compute_accuracy(y_test, y_pred_labels)
         print(f'Accuracy for fold {i}: {accuracy:.2f}')
         scores.append(accuracy)
-    average_accuracy = np.mean(scores)
+        average_accuracy = np.mean(scores)
+
     print(f'Average accuracy: {average_accuracy:.2f}')
 
 
