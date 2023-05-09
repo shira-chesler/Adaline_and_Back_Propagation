@@ -16,6 +16,7 @@ Code
 First, we import the necessary libraries and define a constant EPSILLON.
 
 """
+import traceback
 
 import numpy as np
 import torch
@@ -34,8 +35,8 @@ The `read_data` function reads the data from the text files and returns a tuple 
 def read_data() -> tuple:
     data = []
     labels = np.array([])
-    for i in range(1, 181):
-        path = "C:\\Ariel codes\\NN\\Adaline\\" + str(i) + ".txt"
+    for i in range(1, 469):
+        path = "C:\\Ariel codes\\NN\\Adaline\\clean\\" + str(i) + ".txt"
         try:
             with open(path) as f:
                 idx = 0
@@ -55,6 +56,32 @@ def read_data() -> tuple:
                     idx += 1
                 f.close()
         except:
+            # print("error in clean", i)
+            pass
+
+    for i in range(1, 505):
+        path = "C:\\Ariel codes\\NN\\Adaline\\dirty\\" + str(i) + ".txt"
+        try:
+            with open(path) as f:
+                idx = 0
+                while True:
+                    line = f.readline()
+                    if not line:
+                        break
+                    if line == '\n':
+                        continue
+                    line = line.replace('(', '')
+                    line = line.replace(')', '')
+                    line_data_str = line.split(',')
+                    line_data_int = list(map(int, line_data_str))
+                    labels = np.append(labels, line_data_int[0])
+                    del line_data_int[0]
+                    data.append(np.array(line_data_int))
+                    idx += 1
+                f.close()
+        except:
+            # traceback.print_exc()
+            # print("error in dirty", i)
             pass
     print("done reading")
     return data, labels
@@ -281,4 +308,9 @@ def run_adaline(first, second):
 
 
 if __name__ == '__main__':
+    print("bet vs lamed:")
+    run_adaline('b', 'l')
+    print("bet vs mem:")
+    run_adaline('b', 'm')
+    print("lamed vs mem:")
     run_adaline('l', 'm')
