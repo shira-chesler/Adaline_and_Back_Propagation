@@ -20,6 +20,7 @@ import traceback
 
 import numpy as np
 import torch
+import pathlib
 
 EPSILLON = 1e-5
 
@@ -35,10 +36,11 @@ The `read_data` function reads the data from the text files and returns a tuple 
 def read_data() -> tuple:
     data = []
     labels = np.array([])
+    directorypath = str(pathlib.Path().resolve())
     for i in range(1, 469):
-        path = "C:\\Ariel codes\\NN\\Adaline\\clean\\" + str(i) + ".txt"
+        fullpath = directorypath+"\\withoutnoise\\" + str(i) + ".txt"
         try:
-            with open(path) as f:
+            with open(fullpath) as f:
                 idx = 0
                 while True:
                     line = f.readline()
@@ -60,9 +62,9 @@ def read_data() -> tuple:
             pass
 
     for i in range(1, 505):
-        path = "C:\\Ariel codes\\NN\\Adaline\\dirty\\" + str(i) + ".txt"
+        fullpath = directorypath+"\\noise\\" + str(i) + ".txt"
         try:
-            with open(path) as f:
+            with open(fullpath) as f:
                 idx = 0
                 while True:
                     line = f.readline()
@@ -83,6 +85,7 @@ def read_data() -> tuple:
             # traceback.print_exc()
             # print("error in dirty", i)
             pass
+
     print("done reading")
     return data, labels
 
@@ -253,9 +256,7 @@ The `run_adaline` function coordinates the entire process of reading the data, s
 """
 
 
-def run_adaline(first, second):
-    data, labels = read_data()
-
+def run_adaline(first, second, data, labels):
     classify_mem_vs_bet_data = [x for i, x in enumerate(data) if (labels[i] == 1 or labels[i] == 3)]
     classify_mem_vs_bet_labels = [x for x in labels if (x == 1 or x == 3)]
 
@@ -302,15 +303,18 @@ def run_adaline(first, second):
         accuracy = compute_accuracy(y_test, y_pred_labels)
         print(f'Accuracy for fold {i}: {accuracy:.2f}')
         scores.append(accuracy)
-        average_accuracy = np.mean(scores)
 
+    average_accuracy = np.mean(scores)
+    std = np.std(scores)
     print(f'Average accuracy: {average_accuracy:.2f}')
+    print(f'Standard deviation: {std:.5f}')
 
 
 if __name__ == '__main__':
+    data, labels = read_data()
     print("bet vs lamed:")
-    run_adaline('b', 'l')
+    run_adaline('b', 'l', data, labels)
     print("bet vs mem:")
-    run_adaline('b', 'm')
+    run_adaline('b', 'm', data, labels)
     print("lamed vs mem:")
-    run_adaline('l', 'm')
+    run_adaline('l', 'm', data, labels)
