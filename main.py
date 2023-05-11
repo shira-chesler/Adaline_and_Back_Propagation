@@ -13,22 +13,22 @@ Dependencies
 Code
 ----
 
-First, we import the necessary libraries and define a constant EPSILLON.
+First, we import the necessary libraries and define a constant EPSILON.
 
 """
-import traceback
 
 import numpy as np
 import torch
-import pathlib
 
-EPSILLON = 1e-5
+
+EPSILON = 1e-5
 
 """
 Read Data
 ---------
 
-The `read_data` function reads the data from the text files and returns a tuple containing the data and their corresponding labels.
+The `read_data` function reads the data from the text file and returns a tuple containing the data 
+and their corresponding labels.
 
 """
 
@@ -36,56 +36,25 @@ The `read_data` function reads the data from the text files and returns a tuple 
 def read_data() -> tuple:
     data = []
     labels = np.array([])
-    directorypath = str(pathlib.Path().resolve())
-    for i in range(1, 469):
-        fullpath = directorypath+"\\withoutnoise\\" + str(i) + ".txt"
-        try:
-            with open(fullpath) as f:
-                idx = 0
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    if line == '\n':
-                        continue
-                    line = line.replace('(', '')
-                    line = line.replace(')', '')
-                    line_data_str = line.split(',')
-                    line_data_int = list(map(int, line_data_str))
-                    labels = np.append(labels, line_data_int[0])
-                    del line_data_int[0]
-                    data.append(np.array(line_data_int))
-                    idx += 1
-                f.close()
-        except:
-            # print("error in clean", i)
-            pass
-
-    for i in range(1, 505):
-        fullpath = directorypath+"\\noise\\" + str(i) + ".txt"
-        try:
-            with open(fullpath) as f:
-                idx = 0
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    if line == '\n':
-                        continue
-                    line = line.replace('(', '')
-                    line = line.replace(')', '')
-                    line_data_str = line.split(',')
-                    line_data_int = list(map(int, line_data_str))
-                    labels = np.append(labels, line_data_int[0])
-                    del line_data_int[0]
-                    data.append(np.array(line_data_int))
-                    idx += 1
-                f.close()
-        except:
-            # traceback.print_exc()
-            # print("error in dirty", i)
-            pass
-
+    try:
+        with open("data.txt") as f:
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                if line == '\n':
+                    continue
+                line_data_str = line.split(',')
+                line_data_int = list(map(int, line_data_str))
+                if len(line_data_int) != 101:
+                    continue
+                labels = np.append(labels, line_data_int[0])
+                del line_data_int[0]
+                data.append(np.array(line_data_int))
+            f.close()
+    except:
+        # print("error in clean", i)
+        pass
     print("done reading")
     return data, labels
 
@@ -94,24 +63,6 @@ def read_data() -> tuple:
 Train Test Split
 ----------------
 
-The `train_test_split` function splits the data into training and testing sets.
-"""
-
-
-def try_train_test_split(data, labels):
-    # Check no error occurred during reading
-    if len(data) != len(labels):
-        print("ERROR")
-        exit(1)
-    data_length = len(labels)
-
-    # Converting to torch type
-    X = torch.tensor(np.array(data))
-    y = torch.tensor(np.array(labels).astype(int), dtype=torch.int)
-    return X, X, y, y
-
-
-"""
 The `train_test_split` function splits the data into training and testing sets based on the input parameter num.
 
 """
@@ -153,8 +104,7 @@ def train_test_split(data, labels, num) -> tuple:
         y_train, y_test = y[shuffle_idx[:percent80]], y[shuffle_idx[percent80:]]
 
     elif num == 2:
-        X_train, X_test = X_train, X_test = X[torch.tensor(
-            list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], \
+        X_train, X_test = X[torch.tensor(list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], \
                                             X[shuffle_idx[percent60:percent80]]
         y_train, y_test = y[torch.tensor(list(shuffle_idx[:percent60]) + list(shuffle_idx[percent80:]))], y[
             shuffle_idx[percent60:percent80]]
@@ -197,7 +147,7 @@ def adjust_weights(X_train, y_train) -> np.array:
     max_iterations = 10000
 
     iteration = 0
-    while max_weight_change > EPSILLON and iteration < max_iterations:
+    while max_weight_change > EPSILON and iteration < max_iterations:
         iteration += 1
         if iteration % 1000 == 0:
             print(iteration)
@@ -223,26 +173,27 @@ The `predict` function generates predictions based on the input test data, weigh
 
 
 def predict(X_test, weights, bias, label1, label2):
-    y_pred = X_test @ weights + bias
-    print("y_pred", y_pred)
-    y_pred_labels = np.where(y_pred >= (label1 + label2) / 2, label2, label1)
-    return y_pred_labels
+    y_prediction = X_test @ weights + bias
+    print("y_prediction", y_prediction)
+    y_prediction_labels = np.where(y_prediction >= (label1 + label2) / 2, label2, label1)
+    return y_prediction_labels
 
 
 """
 Compute Accuracy
 ----------------
 
-The `compute_accuracy` function calculates the accuracy of the model by comparing its predictions to the ground truth labels.
+The `compute_accuracy` function calculates the accuracy of the model
+by comparing its predictions to the ground truth labels.
 
 """
 
 
-def compute_accuracy(y_test, y_pred):
-    assert len(y_test) == len(y_pred)
-    print("y_pred", y_pred)
+def compute_accuracy(y_test, y_prediction):
+    assert len(y_test) == len(y_prediction)
+    print("y_prediction", y_prediction)
     print("y_test", y_test)
-    num_correct = np.sum(y_test == y_pred)
+    num_correct = np.sum(y_test == y_prediction)
     accuracy = num_correct / len(y_test)
     return accuracy
 
@@ -251,7 +202,8 @@ def compute_accuracy(y_test, y_pred):
 Run Adaline
 -----------
 
-The `run_adaline` function coordinates the entire process of reading the data, splitting the data, training the model, generating predictions, and computing the accuracy.
+The `run_adaline` function coordinates the entire process of reading the data, splitting the data, training the model,
+generating predictions, and computing the accuracy.
 
 """
 
@@ -299,8 +251,8 @@ def run_adaline(first, second, data, labels):
         y_test = y_test.cpu().detach().numpy()
 
         bias, weights = adjust_weights(X_train, y_train)
-        y_pred_labels = predict(X_test, weights, bias, first_label, second_label)
-        accuracy = compute_accuracy(y_test, y_pred_labels)
+        y_prediction_labels = predict(X_test, weights, bias, first_label, second_label)
+        accuracy = compute_accuracy(y_test, y_prediction_labels)
         print(f'Accuracy for fold {i}: {accuracy:.2f}')
         scores.append(accuracy)
 
