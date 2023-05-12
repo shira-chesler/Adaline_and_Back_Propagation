@@ -149,8 +149,6 @@ def adjust_weights(X_train, y_train) -> np.array:
     iteration = 0
     while max_weight_change > EPSILON and iteration < max_iterations:
         iteration += 1
-        if iteration % 1000 == 0:
-            print(iteration)
         max_weight_change = 0
         for i in range(0, len(X_train)):
             y_in = bias + (X_train[i] @ weights).sum()
