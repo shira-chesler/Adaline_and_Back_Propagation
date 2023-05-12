@@ -144,7 +144,7 @@ def adjust_weights(X_train, y_train) -> np.array:
     bias = 0
     learning_rate = 0.001
     max_weight_change = 1
-    max_iterations = 10000
+    max_iterations = 100
 
     iteration = 0
     while max_weight_change > EPSILON and iteration < max_iterations:
